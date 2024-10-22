@@ -44,27 +44,30 @@ def enviar_req(tipo):
         print("Nenhuma resposta do servidor.")
         return None
 
-def receber_resp(op):
+def receber_resp(resposta, tipo):
     if resposta and Raw in resposta:
         conteudo = resposta[Raw].load
-        if len(conteudo) >= 4:
+        if tipo == 3:  #formatação para op 3
+            resposta_formatada = int.from_bytes(conteudo[4:], byteorder='big')
+            print(f"Quantidade de respostas do servidor: {resposta_formatada}")
+        else:  #para os outros tipos (data e hora, mensagem motivacional)
             resposta_formatada = conteudo[4:].decode('utf-8')
             print(f"Resposta do servidor: {resposta_formatada}")
-        else:
-            print("Resposta inválida ou incompleta.")
     else:
         print("Nenhuma resposta recebida.")
 
+
+resposta = ""
 while True:
     menu()
     op = opcoes()
     match op:
         case 1:
-            enviar_req(0x00)  #Data e hora
+            resposta = enviar_req(0x00)  #Data e hora
         case 2:
-            enviar_req(0x01)  #Mensagem motivacional
+            resposta = enviar_req(0x01)  #Mensagem motivacional
         case 3:
-            enviar_req(0x02)  #Quantidade de respostas
+            resposta = enviar_req(0x02)  #Quantidade de respostas
         case 4:
             print("Encerrando o cliente.")
             break
@@ -72,6 +75,4 @@ while True:
             print("Escolha inválida, tente novamente.")
     
     if resposta:
-        processar_resposta(resposta)
-        
-cliente_socket.close()
+        receber_resp(resposta, op)
